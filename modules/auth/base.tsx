@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { login } from "@/services/auth/login";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { loginSchema } from "@/lib/validations/auth";
 import z from "zod";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";

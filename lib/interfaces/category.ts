@@ -1,7 +1,7 @@
 export interface Category {
   id: string;
   name: string;
-  isPublic: boolean;
+  public: boolean;
   thumbImg: string;
   slug: string;
 }

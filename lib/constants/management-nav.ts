@@ -4,55 +4,55 @@ export const MANAGEMENT_ROUTES = [
   {
     key: "overview",
     href: MANAGEMENT_BASE,
-    label: "Overview",
+    label: "Tổng quan",
     isOverview: true as const,
   },
   {
     key: "categories",
     href: `${MANAGEMENT_BASE}/categories`,
-    label: "Categories",
+    label: "Danh mục",
     isOverview: false as const,
   },
   {
     key: "books",
     href: `${MANAGEMENT_BASE}/books`,
-    label: "Books",
+    label: "Sách",
     isOverview: false as const,
   },
   {
     key: "orders",
     href: `${MANAGEMENT_BASE}/orders`,
-    label: "Orders",
+    label: "Đơn hàng",
     isOverview: false as const,
   },
   {
     key: "collections",
     href: `${MANAGEMENT_BASE}/collections`,
-    label: "Collections",
+    label: "Bộ sưu tập",
     isOverview: false as const,
   },
   {
     key: "campaigns",
     href: `${MANAGEMENT_BASE}/campaigns`,
-    label: "Campaigns",
+    label: "Chiến dịch",
     isOverview: false as const,
   },
   {
     key: "coupons",
     href: `${MANAGEMENT_BASE}/coupons`,
-    label: "Coupons",
+    label: "Mã giảm giá",
     isOverview: false as const,
   },
   {
     key: "users",
     href: `${MANAGEMENT_BASE}/users`,
-    label: "Users",
+    label: "Người dùng",
     isOverview: false as const,
   },
   {
     key: "reviews",
     href: `${MANAGEMENT_BASE}/reviews`,
-    label: "Reviews",
+    label: "Đánh giá",
     isOverview: false as const,
   },
 ] as const;
@@ -82,7 +82,7 @@ export function getManagementPageTitle(pathname: string) {
     }
   }
   if (p.startsWith(MANAGEMENT_BASE)) {
-    return "Management";
+    return "Quản lý";
   }
-  return "Management";
+  return "Quản lý";
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poltawski_Nowy, JetBrains_Mono } from "next/font/google";
 
 import { UserProvider } from "@/components/commons/UserProvider";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 import "./globals.css";
 

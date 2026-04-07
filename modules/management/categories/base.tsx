@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { CategoryDialog } from "@/modules/management/categories/CategoryDialog";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CategoryUpdateDialog } from "./CategoryUpdateDialog";
+import { CategoryCreateDialog } from "./CategoryCreateDialog";
 import type { Category } from "@/lib/interfaces/category";
 import {
   Table,
@@ -16,55 +18,114 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getCategories } from "@/services/categories/getCategories";
+import {
+  getCategories,
+  deleteCategory,
+  createCategory,
+} from "@/services/categories";
+import { CATEGORIES_PAGE_SIZE } from "@/lib/constants/categoriesPagination";
+import { getImagePlaceholder } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 const MOCK_THUMBS = ["/default_avatar.webp", "/logo.webp"];
 
-const initialCategories: Category[] = [
-  {
-    id: "cat_1",
-    name: "Văn học",
-    isPublic: true,
-    thumbImg: "/logo.webp",
-    slug: "van-hoc",
-  },
-  {
-    id: "cat_2",
-    name: "Kinh tế",
-    isPublic: true,
-    thumbImg: "/default_avatar.webp",
-    slug: "kinh-te",
-  },
-  {
-    id: "cat_3",
-    name: "Thiếu nhi",
-    isPublic: false,
-    thumbImg: "/logo.webp",
-    slug: "thieu-nhi",
-  },
-];
+const SEARCH_DEBOUNCE_MS = 300;
 
 export function CategoriesBase() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [searchDraft, setSearchDraft] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const nextCursorRef = useRef<string | null>(null);
+  const hasMoreRef = useRef(true);
+  const loadingCategoriesRef = useRef(false);
 
   const selectedCount = selectedIds.size;
   const allSelected = selectedCount > 0 && selectedCount === categories.length;
   const someSelected = selectedCount > 0 && selectedCount < categories.length;
 
   useEffect(() => {
-    getCategories().then((categories) => {
-      setCategories(categories);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-  }, []);
+    const t = window.setTimeout(
+      () => setDebouncedKeyword(searchDraft.trim()),
+      SEARCH_DEBOUNCE_MS,
+    );
+    return () => window.clearTimeout(t);
+  }, [searchDraft]);
+
+  const loadCategories = useCallback(
+    async (options?: { reset?: boolean }) => {
+      const shouldReset = !!options?.reset;
+      if (loadingCategoriesRef.current) return;
+      if (!shouldReset && !hasMoreRef.current) return;
+
+      loadingCategoriesRef.current = true;
+      setIsLoadingMore(true);
+      try {
+        const cursorToUse = shouldReset ? null : nextCursorRef.current;
+        const items = await getCategories({
+          cursor: cursorToUse,
+          keyword: debouncedKeyword || undefined,
+          limit: CATEGORIES_PAGE_SIZE,
+        });
+
+        const pageFull = items.length === CATEGORIES_PAGE_SIZE;
+        const tailId =
+          items.length > 0 ? items[items.length - 1]?.id ?? null : null;
+        hasMoreRef.current = pageFull && Boolean(tailId);
+        nextCursorRef.current = pageFull && tailId ? tailId : null;
+
+        setCategories((prev) => {
+          if (shouldReset) return items;
+          const seen = new Set(prev.map((c) => c.id));
+          const appended = items.filter((c) => !seen.has(c.id));
+          return [...prev, ...appended];
+        });
+        setHasLoadedOnce(true);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        loadingCategoriesRef.current = false;
+        setIsLoadingMore(false);
+      }
+    },
+    [debouncedKeyword],
+  );
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+    hasMoreRef.current = true;
+    nextCursorRef.current = null;
+    void loadCategories({ reset: true });
+  }, [loadCategories]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        void loadCategories();
+      },
+      {
+        root: null,
+        rootMargin: "320px 0px 320px 0px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loadCategories]);
 
   useEffect(() => {
     if (!headerCheckboxRef.current) return;
@@ -98,19 +159,20 @@ export function CategoriesBase() {
     if (!open) setEditingId(null);
   };
 
-  const handleDialogSubmit = (payload: Omit<Category, "id">) => {
-    setCategories((prev) => {
-      if (editingId) {
-        return prev.map((c) =>
-          c.id === editingId ? { ...c, ...payload } : c,
-        );
-      }
+  const handleCreateSubmit = async (payload: Omit<Category, "id">) => {
+    const created = await createCategory(payload);
+    setCategories((prev) => [created, ...prev]);
+  };
 
-      const id = `cat_${Date.now().toString(16)}_${Math.random()
-        .toString(16)
-        .slice(2)}`;
-      return [{ id, ...payload }, ...prev];
-    });
+  const handleCategoryUpdated = (
+    id: string,
+    changes: Partial<Omit<Category, "id">>,
+  ) => {
+    setCategories((prev) =>
+      prev.map((category) =>
+        category.id === id ? { ...category, ...changes } : category,
+      ),
+    );
   };
 
   const openCreate = () => {
@@ -130,7 +192,12 @@ export function CategoriesBase() {
     const ok = window.confirm(`Xoá danh mục "${target.name}"?`);
     if (!ok) return;
 
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    deleteCategory(id)
+      .then(() => {
+        setCategories((prev) => prev.filter((c) => c.id !== id));
+      })
+      .catch((error) => console.error(error));
+
     setSelectedIds((prev) => {
       if (!prev.has(id)) return prev;
       const next = new Set(prev);
@@ -144,42 +211,68 @@ export function CategoriesBase() {
     const ok = window.confirm(`Xoá ${selectedIds.size} danh mục đã chọn?`);
     if (!ok) return;
 
-    setCategories((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+    const ids = Array.from(selectedIds);
+
+    Promise.all(ids.map((id) => deleteCategory(id)))
+      .then(() => {
+        const idSet = new Set(ids);
+        setCategories((prev) => prev.filter((c) => !idSet.has(c.id)));
+      })
+      .catch((error) => console.error(error));
+
     setSelectedIds(new Set());
   };
 
-  const selectedCategories = useMemo(() => {
-    if (selectedIds.size === 0) return [];
-    return categories.filter((c) => selectedIds.has(c.id));
-  }, [categories, selectedIds]);
+  const showInitialSkeleton = !hasLoadedOnce && isLoadingMore;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-            <Button onClick={openCreate} className="gap-2">
-              <Plus className="size-4" />
-              Thêm
-            </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full flex-col gap-2 sm:flex-1 sm:flex-row sm:items-center">
+          <Button onClick={openCreate} className="gap-2 sm:shrink-0">
+            <Plus className="size-4" />
+            Thêm
+          </Button>
+          <div className="relative w-full max-w-md">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              placeholder="Tìm theo tên…"
+              aria-label="Tìm danh mục theo tên"
+              className="pl-9"
+            />
+          </div>
         </div>
 
         <Button
           variant="destructive"
           disabled={selectedCount === 0}
           onClick={deleteSelected}
-          className="gap-2"
+          className="gap-2 sm:shrink-0"
         >
           <Trash2 className="size-4" />
           Xoá ({selectedCount})
         </Button>
       </div>
 
-        <CategoryDialog
+      {editingId && dialogInitialCategory ? (
+        <CategoryUpdateDialog
           open={dialogOpen}
           onOpenChange={handleDialogOpenChange}
           initialCategory={dialogInitialCategory}
-          onSubmit={handleDialogSubmit}
+          onUpdated={handleCategoryUpdated}
         />
+      ) : (
+        <CategoryCreateDialog
+          open={dialogOpen}
+          onOpenChange={handleDialogOpenChange}
+          onSubmit={handleCreateSubmit}
+        />
+      )}
 
       <Table>
         <TableHeader>
@@ -190,6 +283,7 @@ export function CategoriesBase() {
                 type="checkbox"
                 checked={allSelected}
                 onChange={toggleAll}
+                disabled={showInitialSkeleton}
                 aria-label="Chọn tất cả"
                 className="h-4 w-4 cursor-pointer"
               />
@@ -203,78 +297,113 @@ export function CategoriesBase() {
         </TableHeader>
 
         <TableBody>
-          {categories.map((c) => (
-            <TableRow key={c.id}>
-              <TableCell className="w-12">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(c.id)}
-                  onChange={() => toggleOne(c.id)}
-                  aria-label={`Chọn ${c.name}`}
-                  className="h-4 w-4 cursor-pointer"
-                />
-              </TableCell>
-              <TableCell className="font-medium">{c.name}</TableCell>
-              <TableCell>
-                <Switch
-                  checked={c.isPublic}
-                  onCheckedChange={(checked) => {
-                    setCategories((prev) =>
-                      prev.map((x) =>
-                        x.id === c.id ? { ...x, isPublic: checked } : x,
-                      ),
-                    );
-                  }}
-                  aria-label={`Toggle isPublic ${c.name}`}
-                />
-              </TableCell>
-              <TableCell>
-                <div className="w-24 aspect-square border border-gray-200 rounded-md">
-                  <Image
-                    src={c.thumbImg || MOCK_THUMBS[0]}
-                    alt=""
-                    width={96}
-                    height={96}
-                    className="object-center object-contain w-full h-full"
-                  />
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className="font-mono text-xs">{c.slug}</span>
-              </TableCell>
-              <TableCell className="w-28 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => openEdit(c)}
-                    aria-label={`Edit ${c.name}`}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    className="text-destructive"
-                    onClick={() => deleteOne(c.id)}
-                    aria-label={`Delete ${c.name}`}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+          {showInitialSkeleton
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={`sk-${i}`}>
+                  <TableCell className="w-12">
+                    <Skeleton className="h-4 w-4 rounded" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-40 max-w-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="size-24 rounded-md" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-3 w-28" />
+                  </TableCell>
+                  <TableCell className="w-28 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Skeleton className="size-8 rounded-md" />
+                      <Skeleton className="size-8 rounded-md" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            : categories.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(c.id)}
+                      onChange={() => toggleOne(c.id)}
+                      aria-label={`Chọn ${c.name}`}
+                      className="h-4 w-4 cursor-pointer"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell>
+                    {c.public ? (
+                      <Badge variant="default">Công khai</Badge>
+                    ) : (
+                      <Badge variant="secondary">Riêng tư</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="w-24 aspect-square border border-gray-200 rounded-md">
+                      <Image
+                        src={c.thumbImg || MOCK_THUMBS[0]}
+                        alt=""
+                        width={96}
+                        height={96}
+                        placeholder="blur"
+                        blurDataURL={getImagePlaceholder("#e5e7eb")}
+                        className="object-center object-contain w-full h-full"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-xs">{c.slug}</span>
+                  </TableCell>
+                  <TableCell className="w-28 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => openEdit(c)}
+                        aria-label={`Edit ${c.name}`}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-destructive"
+                        onClick={() => deleteOne(c.id)}
+                        aria-label={`Delete ${c.name}`}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
 
-          {categories.length === 0 && (
+          {!showInitialSkeleton && categories.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                Chưa có danh mục.
+              <TableCell
+                colSpan={6}
+                className="text-center text-muted-foreground py-10"
+              >
+                {debouncedKeyword
+                  ? "Không tìm thấy danh mục phù hợp."
+                  : "Chưa có danh mục."}
               </TableCell>
             </TableRow>
-          )}
+          ) : null}
         </TableBody>
       </Table>
+
+      <div ref={loadMoreRef} aria-hidden className="h-1 w-full shrink-0" />
+
+      {hasLoadedOnce && isLoadingMore && categories.length > 0 ? (
+        <p className="text-center text-sm text-muted-foreground">
+          Đang tải thêm…
+        </p>
+      ) : null}
     </div>
   );
 }

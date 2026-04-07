@@ -39,5 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-# heroui-agents-md
-.heroui-docs/
+.docs/**
+!.docs/api-docs.json
+
+.cursorrules

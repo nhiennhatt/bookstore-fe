@@ -1,3 +1,5 @@
+"use server";
+
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -18,23 +20,41 @@ const serverAxios = axios.create({
 
 const refreshInFlight = new Map<string, Promise<string>>();
 
+const sessionCookieOptions = {
+  httpOnly: true,
+  sameSite: true as const,
+  path: "/",
+};
+
 async function performTokenRefresh(refreshToken: string): Promise<string> {
   const { data } = await axios.post<LoginResponse>(
     `${process.env.NEXT_PUBLIC_API_URL}/auth/token`,
     { refreshToken },
     { headers: { "Content-Type": "application/json" } },
   );
-  const cookieStore = await cookies();
-  cookieStore.set("token", data.token);
-  cookieStore.set("refreshToken", data.refreshToken);
+  try {
+    const cookieStore = await cookies();
+    cookieStore.set("token", data.token, sessionCookieOptions);
+    cookieStore.set("refreshToken", data.refreshToken, sessionCookieOptions);
+  } catch {
+    // Chỉ Server Action / Route Handler được ghi cookie. Gọi serverAxios từ RSC
+    // hoặc chuỗi khác có thể refresh token nhưng không được set cookie — vẫn trả
+    // token để retry request hiện tại thành công.
+  }
   return data.token;
 }
 
 async function onRefreshFailure(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete("token");
-  cookieStore.delete("refreshToken");
-  revalidatePath("/", "layout");
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete("token");
+    cookieStore.delete("refreshToken");
+    revalidatePath("/", "layout");
+  } catch {
+    // Chỉ Server Action / Route Handler được ghi cookie. Gọi serverAxios từ RSC
+    // hoặc chuỗi khác có thể refresh token nhưng không được set cookie — vẫn trả
+    // token để retry request hiện tại thành công.
+  }
 }
 
 function getSharedRefreshPromise(refreshToken: string): Promise<string> {
@@ -43,6 +63,7 @@ function getSharedRefreshPromise(refreshToken: string): Promise<string> {
 
   p = performTokenRefresh(refreshToken)
     .catch(async (err) => {
+      console.error(err);
       await onRefreshFailure();
       throw err;
     })
