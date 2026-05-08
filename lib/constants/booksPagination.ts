@@ -1,1 +1,1 @@
-export const BOOKS_PAGE_SIZE = 12;
+export const BOOKS_PAGE_SIZE = 10;

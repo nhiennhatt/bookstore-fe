@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type Book, BookStatus } from "@/lib/interfaces/book";
+import { type BookOverview, BookStatus } from "@/lib/interfaces/book";
 import { getImagePlaceholder } from "@/lib/utils";
 import { cn } from "@/lib/utils/index";
 import Link from "next/link";
@@ -41,8 +41,8 @@ function statusLabel(status: BookStatus): string {
   }
 }
 
-export function AdminBookCard({ book }: { book: Book }) {
-  const categoryName = book.category?.name;
+export function AdminBookCard({ book }: { book: BookOverview }) {
+  const categoryName = book.categoryName;
   const coverSrc = book.image?.trim()
     ? book.image
     : "/logo.webp";

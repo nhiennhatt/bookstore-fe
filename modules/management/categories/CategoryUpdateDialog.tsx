@@ -59,6 +59,7 @@ export function CategoryUpdateDialog({
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [isPublic, setIsPublic] = useState(true);
+  const [isFeatured, setIsFeatured] = useState(false);
   const [thumbImg, setThumbImg] = useState(defaultThumbImg);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [activeSection, setActiveSection] = useState<"info" | "thumb">("info");
@@ -76,12 +77,14 @@ export function CategoryUpdateDialog({
     const nextName = initialCategory?.name ?? "";
     const nextSlug = initialCategory?.slug ?? "";
     const nextIsPublic = initialCategory?.public ?? true;
+    const nextIsFeatured = initialCategory?.featured ?? false;
     const nextThumbImg = initialCategory?.thumbImg ?? MOCK_THUMBS[0];
 
     const timeoutId = window.setTimeout(() => {
       setName(nextName);
       setSlug(nextSlug);
       setIsPublic(nextIsPublic);
+      setIsFeatured(nextIsFeatured);
       setThumbImg(nextThumbImg);
       setIsSlugManuallyEdited(false);
       setThumbFile(null);
@@ -119,16 +122,22 @@ export function CategoryUpdateDialog({
     if (!nextSlug) return;
     if (slugStatus === "exists" || slugStatus === "checking") return;
 
-    await updateCategoryInfo(initialCategory.id, {
+    const infoRes = await updateCategoryInfo(initialCategory.id, {
       name: nextName,
       slug: nextSlug,
       isPublic,
+      isFeatured,
     });
+    if (infoRes.error) {
+      console.error(infoRes.error);
+      return;
+    }
 
     onUpdated?.(initialCategory.id, {
       name: nextName,
       slug: nextSlug,
       public: isPublic,
+      featured: isFeatured,
     });
     onOpenChange(false);
   };
@@ -136,7 +145,7 @@ export function CategoryUpdateDialog({
   const handleUpdateThumb = async () => {
     if (!initialCategory?.id) return;
     if (!thumbFile) return; // endpoint expects an image file
-    await updateCategoryThumb(
+    const thumbRes = await updateCategoryThumb(
       initialCategory.id,
       (() => {
         const fd = new FormData();
@@ -144,6 +153,10 @@ export function CategoryUpdateDialog({
         return fd;
       })(),
     );
+    if (thumbRes.error) {
+      console.error(thumbRes.error);
+      return;
+    }
 
     onUpdated?.(initialCategory.id, {
       thumbImg,
@@ -184,14 +197,13 @@ export function CategoryUpdateDialog({
     scheduleSlugStatus("checking");
 
     const timeoutId = window.setTimeout(async () => {
-      try {
-        const response = await checkSlugExistence(derivedSlug);
-        if (slugCheckRequestIdRef.current !== requestId) return;
-        setSlugStatus(response.result ? "exists" : "available");
-      } catch {
-        if (slugCheckRequestIdRef.current !== requestId) return;
+      const response = await checkSlugExistence(derivedSlug);
+      if (slugCheckRequestIdRef.current !== requestId) return;
+      if (response.error) {
         setSlugStatus("error");
+        return;
       }
+      setSlugStatus(response.data.result ? "exists" : "available");
     }, 500);
 
     return () => window.clearTimeout(timeoutId);
@@ -296,6 +308,10 @@ export function CategoryUpdateDialog({
               <div className="flex items-center gap-2">
                 <Switch checked={isPublic} onCheckedChange={setIsPublic} />
                 <Label>Công khai</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={isFeatured} onCheckedChange={setIsFeatured} />
+                <Label>Nổi bật</Label>
               </div>
 
               <div className="mt-2 flex justify-end">

@@ -26,6 +26,7 @@ import { slugify } from "@/lib/utils";
 import { checkSlugExistence } from "@/services/categories";
 
 const MOCK_THUMBS = ["/default_avatar.webp", "/logo.webp"];
+type CreateCategoryInput = Omit<Category, "id">;
 
 export function CategoryCreateDialog({
   open,
@@ -34,13 +35,14 @@ export function CategoryCreateDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (payload: Omit<Category, "id">) => void;
+  onSubmit: (payload: CreateCategoryInput) => void;
 }) {
   const defaultThumbImg = useMemo(() => MOCK_THUMBS[0], []);
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [isPublic, setIsPublic] = useState(true);
+  const [isFeatured, setIsFeatured] = useState(false);
 
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [slugStatus, setSlugStatus] = useState<
@@ -56,6 +58,7 @@ export function CategoryCreateDialog({
       setName("");
       setSlug("");
       setIsPublic(true);
+      setIsFeatured(false);
       setIsSlugManuallyEdited(false);
       setSlugStatus("idle");
     }, 0);
@@ -86,14 +89,13 @@ export function CategoryCreateDialog({
     scheduleSlugStatus("checking");
 
     const timeoutId = window.setTimeout(async () => {
-      try {
-        const response = await checkSlugExistence(derivedSlug);
-        if (slugCheckRequestIdRef.current !== requestId) return;
-        setSlugStatus(response.result ? "exists" : "available");
-      } catch {
-        if (slugCheckRequestIdRef.current !== requestId) return;
+      const response = await checkSlugExistence(derivedSlug);
+      if (slugCheckRequestIdRef.current !== requestId) return;
+      if (response.error) {
         setSlugStatus("error");
+        return;
       }
+      setSlugStatus(response.data.result ? "exists" : "available");
     }, 500);
 
     return () => window.clearTimeout(timeoutId);
@@ -111,6 +113,7 @@ export function CategoryCreateDialog({
       name: nextName,
       slug: nextSlug,
       public: isPublic,
+      featured: isFeatured,
       thumbImg: defaultThumbImg,
     });
     onOpenChange(false);
@@ -189,6 +192,10 @@ export function CategoryCreateDialog({
             <div className="flex items-center gap-2">
               <Switch checked={isPublic} onCheckedChange={setIsPublic} />
               <Label>Công khai</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={isFeatured} onCheckedChange={setIsFeatured} />
+              <Label>Nổi bật</Label>
             </div>
           </div>
         </div>

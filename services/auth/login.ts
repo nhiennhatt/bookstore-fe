@@ -1,34 +1,36 @@
 "use server";
+
 import { cookies } from "next/headers";
 
-import { AxiosError } from "axios";
 import axios from "axios";
 
 import { LoginResponse } from "@/lib/interfaces/auth";
-import { ErrorResponse } from "@/lib/interfaces/common";
+import type { APIResponse } from "@/lib/interfaces/common";
+import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
-export async function login(username: string, password: string) {
+const sessionCookieOptions = {
+  httpOnly: true,
+  sameSite: true as const,
+  path: "/",
+};
+
+export async function login(
+  username: string,
+  password: string,
+): Promise<APIResponse<LoginResponse>> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  try {
-    const response = await axios.post<LoginResponse>(`${baseUrl}/auth/login`, {
+  const res = await callAPIWrapper(() =>
+    axios.post<LoginResponse>(`${baseUrl}/auth/login`, {
       username,
       password,
-    });
+    }),
+  );
+
+  if (!res.error && res.data) {
     const cookieStore = await cookies();
-    cookieStore.set("token", response.data.token, {
-      httpOnly: true,
-      sameSite: true,
-      path: "/",
-    });
-    cookieStore.set("refreshToken", response.data.refreshToken, {
-      httpOnly: true,
-      sameSite: true,
-      path: "/",
-    });
-  } catch (error: unknown) {
-    const axiosError = error as AxiosError<ErrorResponse>;
-    console.error(axiosError);
-    throw new Error(axiosError.message || "Unknown error");
+    cookieStore.set("token", res.data.token, sessionCookieOptions);
+    cookieStore.set("refreshToken", res.data.refreshToken, sessionCookieOptions);
   }
-  return true;
+
+  return res;
 }

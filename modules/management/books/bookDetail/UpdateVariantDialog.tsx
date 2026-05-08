@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +60,7 @@ export function UpdateVariantDialog({
     setError(null);
     setSubmitting(true);
     try {
-      await updateBookVariant(variant.id, bookId, {
+      const res = await updateBookVariant(variant.id, bookId, {
         name,
         isbn,
         status: form.status,
@@ -69,15 +68,12 @@ export function UpdateVariantDialog({
         ...(salePrice !== undefined && salePrice >= 1 ? { salePrice } : {}),
         ...(inventory !== undefined ? { inventory } : {}),
       });
+      if (res.error) {
+        setError(res.error.title ?? "Không cập nhật được.");
+        return;
+      }
       onOpenChange(false);
       await onUpdated?.();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { title?: string } | undefined;
-        setError(data?.title ?? err.message ?? "Không cập nhật được.");
-      } else {
-        setError("Đã xảy ra lỗi.");
-      }
     } finally {
       setSubmitting(false);
     }

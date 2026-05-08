@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ImageIcon, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { isAxiosError } from "axios";
 
 import { CategorySearchableSelect } from "@/components/commons/CategorySearchableSelect";
 import { Button } from "@/components/ui/button";
@@ -133,17 +132,14 @@ export function BookDetailBase({ book }: { book: Book }) {
     try {
       const formData = new FormData();
       formData.append("file", pendingCoverFile);
-      await updateBookImage(book.id, formData);
+      const res = await updateBookImage(book.id, formData);
+      if (res.error) {
+        setCoverImageError(res.error.title ?? "Không tải ảnh lên được.");
+        return;
+      }
       setCoverDialogOpen(false);
       resetCoverPicker();
       router.refresh();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { title?: string } | undefined;
-        setCoverImageError(data?.title ?? err.message ?? "Không tải ảnh lên được.");
-      } else {
-        setCoverImageError("Đã xảy ra lỗi.");
-      }
     } finally {
       setIsSavingCover(false);
     }
@@ -172,7 +168,7 @@ export function BookDetailBase({ book }: { book: Book }) {
     setSaveError(null);
     setIsSaving(true);
     try {
-      await updateBook(book.id, {
+      const updateRes = await updateBook(book.id, {
         name: nextName,
         slug: nextSlug,
         status,
@@ -181,21 +177,24 @@ export function BookDetailBase({ book }: { book: Book }) {
         publisher: publisher.trim() || undefined,
         distributor: distributor.trim() || undefined,
       });
+      if (updateRes.error) {
+        setSaveError(updateRes.error.title ?? "Không lưu được.");
+        return;
+      }
 
       const previousCategoryId = categoryIdFromBook(book);
       const nextCategoryId = categoryId.trim();
       if (nextCategoryId && nextCategoryId !== previousCategoryId) {
-        await updateBookCategory(book.id, { categoryId: nextCategoryId });
+        const catRes = await updateBookCategory(book.id, {
+          categoryId: nextCategoryId,
+        });
+        if (catRes.error) {
+          setSaveError(catRes.error.title ?? "Không cập nhật danh mục được.");
+          return;
+        }
       }
 
       router.refresh();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { title?: string } | undefined;
-        setSaveError(data?.title ?? err.message ?? "Không lưu được.");
-      } else {
-        setSaveError("Đã xảy ra lỗi.");
-      }
     } finally {
       setIsSaving(false);
     }
@@ -206,17 +205,14 @@ export function BookDetailBase({ book }: { book: Book }) {
     setDeleteError(null);
     setIsDeleting(true);
     try {
-      await deleteBook(book.id);
+      const delRes = await deleteBook(book.id);
+      if (delRes.error) {
+        setDeleteError(delRes.error.title ?? "Không xóa được sách.");
+        return;
+      }
       setDeleteDialogOpen(false);
       router.push("/management/books");
       router.refresh();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { title?: string } | undefined;
-        setDeleteError(data?.title ?? err.message ?? "Không xóa được sách.");
-      } else {
-        setDeleteError("Đã xảy ra lỗi.");
-      }
     } finally {
       setIsDeleting(false);
     }

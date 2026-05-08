@@ -13,8 +13,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        const user = await getUser();
-        setUser(user);
+        const res = await getUser();
+        if (res.error) {
+          setUser(null);
+          return;
+        }
+        setUser(res.data ?? null);
       } catch (error) {
         setUser(null);
       } finally {

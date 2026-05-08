@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { isAxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -96,16 +95,13 @@ export function UpdateVariantImageDialog({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      await updateVariantImage(variant.id, bookId, fd);
+      const res = await updateVariantImage(variant.id, bookId, fd);
+      if (res.error) {
+        setError(res.error.title ?? "Không cập nhật được ảnh.");
+        return;
+      }
       onOpenChange(false);
       await onUpdated?.();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { title?: string } | undefined;
-        setError(data?.title ?? err.message ?? "Không cập nhật được ảnh.");
-      } else {
-        setError("Đã xảy ra lỗi.");
-      }
     } finally {
       setSubmitting(false);
     }

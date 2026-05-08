@@ -83,7 +83,13 @@ export function Auth() {
       setErrors(Object.fromEntries(errors));
       return;
     }
-    await login(parsedData.username, parsedData.password);
+    const loginRes = await login(parsedData.username, parsedData.password);
+    if (loginRes.error) {
+      setErrors({
+        signinPassword: loginRes.error.title ?? "Đăng nhập thất bại.",
+      });
+      return;
+    }
     await loadUser();
     router.push("/");
   };

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { isAxiosError } from "axios";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -66,22 +65,15 @@ export function BookVariantsSection({
   const load = useCallback(async () => {
     setListError(null);
     setLoading(true);
-    try {
-      const list = await getBookVariants(bookId);
-      setVariants(list);
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { title?: string } | undefined;
-        setListError(
-          data?.title ?? err.message ?? "Không tải được danh sách phiên bản.",
-        );
-      } else {
-        setListError("Không tải được danh sách phiên bản.");
-      }
+    const response = await getBookVariants(bookId);
+    if (response.error) {
+      setListError(response.error.title ?? "Không tải được danh sách phiên bản.");
       setVariants([]);
-    } finally {
       setLoading(false);
+      return;
     }
+    setVariants(response.data ?? []);
+    setLoading(false);
   }, [bookId]);
 
   useEffect(() => {
@@ -96,12 +88,12 @@ export function BookVariantsSection({
     ) {
       return;
     }
-    try {
-      await deleteBookVariant(v.id, bookId);
-      await load();
-    } catch (err) {
-      console.error(err);
+    const delRes = await deleteBookVariant(v.id, bookId);
+    if (delRes.error) {
+      console.error(delRes.error);
+      return;
     }
+    await load();
   };
 
   return (

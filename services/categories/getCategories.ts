@@ -1,25 +1,34 @@
 "use server";
 
+import type { APIResponse } from "@/lib/interfaces/common";
 import { Category } from "@/lib/interfaces/category";
-import serverAxios from "@/lib/server/serverAxios";
+import serverSecurityAxios from "@/lib/server/serverAxios";
+import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
-/** GET /categories — body: CategoriesFilter (cursor?, keyword?, limit?, isPublic?) */
+/** GET /categories — query: cursor?, keyword?, limit?, isPublic?, isFeatured? */
 export async function getCategories({
   cursor,
   keyword,
   limit,
+  isPublic,
+  isFeatured,
 }: {
   cursor?: string | null;
   keyword?: string | null;
   limit?: number;
-}): Promise<Category[]> {
+  isPublic?: boolean;
+  isFeatured?: boolean;
+}): Promise<APIResponse<Category[]>> {
   const trimmed = keyword?.trim();
-  const response = await serverAxios.get<Category[]>("/categories", {
-    data: {
-      ...(cursor ? { cursor } : {}),
-      ...(trimmed ? { keyword: trimmed } : {}),
-      ...(typeof limit === "number" ? { limit } : {}),
-    },
-  });
-  return response.data;
+  return callAPIWrapper(() =>
+    serverSecurityAxios.get<Category[]>("/categories", {
+      params: {
+        ...(cursor ? { cursor } : {}),
+        ...(trimmed ? { keyword: trimmed } : {}),
+        ...(limit ? { limit } : {}),
+        ...(typeof isPublic === "boolean" ? { isPublic } : {}),
+        ...(typeof isFeatured === "boolean" ? { isFeatured } : {}),
+      },
+    }),
+  );
 }

@@ -1,6 +1,8 @@
 "use server";
 
-import serverAxios from "@/lib/server/serverAxios";
+import type { APIResponse } from "@/lib/interfaces/common";
+import serverSecurityAxios from "@/lib/server/serverAxios";
+import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 export async function updateCategoryInfo(
   id: string,
@@ -8,8 +10,10 @@ export async function updateCategoryInfo(
     name: string;
     slug: string;
     isPublic: boolean;
+    isFeatured: boolean;
   },
-): Promise<void> {
-  await serverAxios.patch(`/categories/${id}`, payload);
+): Promise<APIResponse<void>> {
+  return callAPIWrapper(() =>
+    serverSecurityAxios.patch<void>(`/categories/${id}`, payload),
+  );
 }
-

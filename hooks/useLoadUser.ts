@@ -12,8 +12,12 @@ export function useLoadUser() {
   return useCallback(async () => {
     setLoading(true);
     try {
-      const user = await getUser();
-      setUser(user);
+      const res = await getUser();
+      if (res.error) {
+        setUser(null);
+        return;
+      }
+      setUser(res.data ?? null);
     } catch (error) {
       setUser(null);
     } finally {

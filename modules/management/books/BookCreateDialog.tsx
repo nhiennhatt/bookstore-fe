@@ -131,7 +131,12 @@ export function BookCreateDialog({
 
     setIsSubmitting(true);
     try {
-      const created = await createBook(payload);
+      const createdRes = await createBook(payload);
+      if (createdRes.error || !createdRes.data) {
+        console.error(createdRes.error);
+        return;
+      }
+      const created = createdRes.data;
       const category =
         categoryId &&
         pickedCategory &&
@@ -143,22 +148,18 @@ export function BookCreateDialog({
         : created;
 
       if (coverFile) {
-        try {
-          const formData = new FormData();
-          formData.append("file", coverFile);
-          const afterImage = await updateBookImage(created.id, formData);
-          if (afterImage) {
-            finalBook = { ...created, image: afterImage.result };
-          }
-        } catch (imageError) {
-          console.error(imageError);
+        const formData = new FormData();
+        formData.append("file", coverFile);
+        const imageRes = await updateBookImage(created.id, formData);
+        if (imageRes.error) {
+          console.error(imageRes.error);
+        } else if (imageRes.data) {
+          finalBook = { ...finalBook, image: imageRes.data.result };
         }
       }
 
       onCreated(finalBook);
       onOpenChange(false);
-    } catch (error) {
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }

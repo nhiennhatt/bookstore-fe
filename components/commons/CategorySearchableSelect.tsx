@@ -75,14 +75,20 @@ export function CategorySearchableSelect({
     let cancelled = false;
     setLoadingList(true);
     setCategories([]);
+    nextCursorRef.current = null;
     hasMoreRef.current = false;
     setHasMore(false);
     void (async () => {
       try {
-        const batch = await getCategories({
+        const res = await getCategories({
           limit: CATEGORIES_PAGE_SIZE,
           keyword: debouncedKeyword || undefined,
         });
+        if (res.error) {
+          console.error(res.error);
+          return;
+        }
+        const batch = res.data;
         if (cancelled || seq !== fetchSeqRef.current) return;
         setCategories(batch);
         applyPageMeta(batch);
@@ -105,11 +111,16 @@ export function CategorySearchableSelect({
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const batch = await getCategories({
+      const res = await getCategories({
         cursor: nextCursorRef.current,
         limit: CATEGORIES_PAGE_SIZE,
         keyword: debouncedKeyword || undefined,
       });
+      if (res.error) {
+        console.error(res.error);
+        return;
+      }
+      const batch = res.data;
       if (gen !== fetchSeqRef.current) return;
       applyPageMeta(batch);
       setCategories((prev) => {

@@ -1,7 +1,9 @@
 "use server";
 
 import type { Book } from "@/lib/interfaces/book";
-import serverAxios from "@/lib/server/serverAxios";
+import type { APIResponse } from "@/lib/interfaces/common";
+import serverSecurityAxios from "@/lib/server/serverAxios";
+import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 type CreateBookPayload = Pick<
   Book,
@@ -16,7 +18,10 @@ type CreateBookPayload = Pick<
   categoryId?: string;
 };
 
-export async function createBook(payload: CreateBookPayload): Promise<Book> {
-  const response = await serverAxios.post<Book>("/books", payload);
-  return response.data;
+export async function createBook(
+  payload: CreateBookPayload,
+): Promise<APIResponse<Book>> {
+  return callAPIWrapper(() =>
+    serverSecurityAxios.post<Book>("/books", payload),
+  );
 }

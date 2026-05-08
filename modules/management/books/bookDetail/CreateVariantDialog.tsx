@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { isAxiosError } from "axios";
 import { Image as ImageIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -103,7 +102,7 @@ export function CreateVariantDialog({
     setError(null);
     setSubmitting(true);
     try {
-      const created = await createBookVariant({
+      const createdRes = await createBookVariant({
         bookId,
         name,
         isbn,
@@ -115,25 +114,23 @@ export function CreateVariantDialog({
         ...(inventory !== undefined ? { inventory } : {}),
       });
 
+      if (createdRes.error || !createdRes.data) {
+        setError(createdRes.error?.title ?? "Không tạo được.");
+        return;
+      }
+      const created = createdRes.data;
+
       if (coverFile) {
-        try {
-          const fd = new FormData();
-          fd.append("file", coverFile);
-          await updateVariantImage(created.id, bookId, fd);
-        } catch (imgErr) {
-          console.error(imgErr);
+        const fd = new FormData();
+        fd.append("file", coverFile);
+        const imgRes = await updateVariantImage(created.id, bookId, fd);
+        if (imgRes.error) {
+          console.error(imgRes.error);
         }
       }
 
       onOpenChange(false);
       await onCreated?.();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { title?: string } | undefined;
-        setError(data?.title ?? err.message ?? "Không tạo được.");
-      } else {
-        setError("Đã xảy ra lỗi.");
-      }
     } finally {
       setSubmitting(false);
     }

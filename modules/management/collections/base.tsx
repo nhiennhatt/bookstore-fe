@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from "react";
+import Link from "next/link";
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortableOperation, useSortable } from "@dnd-kit/react/sortable";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import type { ColumnDef, Row } from "@tanstack/react-table";
-import { GripVertical, Plus } from "lucide-react";
+import { GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,13 @@ import {
 import type { BookCollection } from "@/lib/interfaces/collection";
 import {
   createCollection,
+  deleteCollection,
   getCollections,
+  updateCollection,
   updateCollectionPriority,
 } from "@/services/collections";
 import { CollectionCreateDialog } from "./CollectionCreateDialog";
+import { CollectionUpdateDialog } from "./CollectionUpdateDialog";
 
 const COLLECTIONS_PAGE_SIZE = 10;
 type DragEndPayload = Parameters<
@@ -81,6 +85,8 @@ export function CollectionsBase() {
   const [collections, setCollections] = useState<BookCollection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [editingCollectionId, setEditingCollectionId] = useState<string | null>(null);
   const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
 
   const loadCollections = useCallback(async () => {
@@ -90,10 +96,15 @@ export function CollectionsBase() {
       let page = 0;
 
       while (true) {
-        const chunk = await getCollections({
+        const res = await getCollections({
           page,
           limit: COLLECTIONS_PAGE_SIZE,
         });
+        if (res.error) {
+          console.error(res.error);
+          break;
+        }
+        const chunk = Array.isArray(res.data) ? res.data : [];
         if (chunk.length === 0) break;
         merged.push(...chunk);
         if (chunk.length < COLLECTIONS_PAGE_SIZE) break;
@@ -113,6 +124,48 @@ export function CollectionsBase() {
     void loadCollections();
   }, [loadCollections]);
 
+  const handleDeleteCollection = useCallback(async (collection: BookCollection) => {
+    const ok = window.confirm(`Xóa bộ sưu tập "${collection.name}"?`);
+    if (!ok) return;
+
+    try {
+      const res = await deleteCollection(collection.id);
+      if (res.error) {
+        console.error(res.error);
+        return;
+      }
+      setCollections((prev) =>
+        normalizePriority(prev.filter((item) => item.id !== collection.id)),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  const handleOpenUpdateDialog = useCallback((collection: BookCollection) => {
+    setEditingCollectionId(collection.id);
+    setUpdateDialogOpen(true);
+  }, []);
+
+  const handleUpdateCollection = useCallback(
+    async (id: string, payload: Pick<BookCollection, "name" | "public">) => {
+      const res = await updateCollection(id, payload);
+      if (res.error) {
+        console.error(res.error);
+        return;
+      }
+      setCollections((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...payload } : item)),
+      );
+    },
+    [],
+  );
+
+  const editingCollection = useMemo(() => {
+    if (!editingCollectionId) return null;
+    return collections.find((item) => item.id === editingCollectionId) ?? null;
+  }, [collections, editingCollectionId]);
+
   const columns = useMemo<ColumnDef<BookCollection>[]>(
     () => [
       {
@@ -122,7 +175,14 @@ export function CollectionsBase() {
       {
         accessorKey: "name",
         header: "Tên bộ sưu tập",
-        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+        cell: ({ row }) => (
+          <Link
+            href={`/management/collections/${row.original.id}`}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {row.original.name}
+          </Link>
+        ),
       },
       {
         accessorKey: "public",
@@ -134,8 +194,33 @@ export function CollectionsBase() {
             <Badge variant="secondary">Riêng tư</Badge>
           ),
       },
+      {
+        id: "actions",
+        header: "Tác vụ",
+        cell: ({ row }) => (
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => handleOpenUpdateDialog(row.original)}
+              aria-label={`Cập nhật ${row.original.name}`}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="text-destructive"
+              onClick={() => void handleDeleteCollection(row.original)}
+              aria-label={`Xóa ${row.original.name}`}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        ),
+      },
     ],
-    [],
+    [handleDeleteCollection, handleOpenUpdateDialog],
   );
 
   const table = useReactTable({
@@ -148,7 +233,12 @@ export function CollectionsBase() {
   const handleCreateCollection = async (
     payload: Pick<BookCollection, "name" | "public">,
   ) => {
-    const created = await createCollection(payload);
+    const res = await createCollection(payload);
+    if (res.error) {
+      console.error(res.error);
+      return;
+    }
+    const created = res.data;
     setCollections((prev) =>
       normalizePriority([
         ...prev,
@@ -180,7 +270,11 @@ export function CollectionsBase() {
     setIsUpdatingPriority(true);
 
     try {
-      await updateCollectionPriority(moved.id, index + 1);
+      const res = await updateCollectionPriority(moved.id, index + 1);
+      if (res.error) {
+        console.error(res.error);
+        setCollections(previous);
+      }
     } catch (error) {
       console.error(error);
       setCollections(previous);
@@ -223,6 +317,9 @@ export function CollectionsBase() {
               ? Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={`sk-${i}`}>
                     <TableCell>
+                      <Skeleton className="h-7 w-7 rounded-md" />
+                    </TableCell>
+                    <TableCell>
                       <Skeleton className="h-4 w-10" />
                     </TableCell>
                     <TableCell>
@@ -255,6 +352,15 @@ export function CollectionsBase() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreateCollection}
+      />
+      <CollectionUpdateDialog
+        open={updateDialogOpen}
+        onOpenChange={(open) => {
+          setUpdateDialogOpen(open);
+          if (!open) setEditingCollectionId(null);
+        }}
+        initialCollection={editingCollection}
+        onSubmit={handleUpdateCollection}
       />
     </div>
   );

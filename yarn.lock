@@ -2250,7 +2250,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-scroll-area@npm:1.2.10":
+"@radix-ui/react-scroll-area@npm:1.2.10, @radix-ui/react-scroll-area@npm:^1.2.10":
   version: 1.2.10
   resolution: "@radix-ui/react-scroll-area@npm:1.2.10"
   dependencies:
@@ -2742,6 +2742,26 @@ __metadata:
   version: 4.0.0
   resolution: "@sindresorhus/merge-streams@npm:4.0.0"
   checksum: 10c0/482ee543629aa1933b332f811a1ae805a213681ecdd98c042b1c1b89387df63e7812248bb4df3910b02b3cc5589d3d73e4393f30e197c9dde18046ccd471fc6b
+  languageName: node
+  linkType: hard
+
+"@stripe/react-stripe-js@npm:^6.3.0":
+  version: 6.3.0
+  resolution: "@stripe/react-stripe-js@npm:6.3.0"
+  dependencies:
+    prop-types: "npm:^15.7.2"
+  peerDependencies:
+    "@stripe/stripe-js": ">=9.3.1 <10.0.0"
+    react: ">=16.8.0 <20.0.0"
+    react-dom: ">=16.8.0 <20.0.0"
+  checksum: 10c0/a2a81cd5035485e44c2abf00ee8107c9db13e07b02dc3d1fb44869021a58fb47ce4f89eb6e89e3a657a608cf651ad263acf78f1ffef75cafe4b79c90dba6a71f
+  languageName: node
+  linkType: hard
+
+"@stripe/stripe-js@npm:^9.4.0":
+  version: 9.4.0
+  resolution: "@stripe/stripe-js@npm:9.4.0"
+  checksum: 10c0/68f7880b8f4e7f1bb5e0a4d135c766fcba46a2bdc3e04228d0ed327f0122222065140d4fa2e2727dbf43edebd2dd0016e6389d8ccce5ee8352a55eed92cef725
   languageName: node
   linkType: hard
 
@@ -3801,6 +3821,9 @@ __metadata:
   resolution: "bookstore-fe@workspace:."
   dependencies:
     "@dnd-kit/react": "npm:^0.3.2"
+    "@radix-ui/react-scroll-area": "npm:^1.2.10"
+    "@stripe/react-stripe-js": "npm:^6.3.0"
+    "@stripe/stripe-js": "npm:^9.4.0"
     "@tailwindcss/postcss": "npm:^4"
     "@tanstack/react-query": "npm:^5.96.2"
     "@tanstack/react-table": "npm:^8.21.3"
@@ -3810,9 +3833,11 @@ __metadata:
     axios: "npm:^1.14.0"
     class-variance-authority: "npm:^0.7.1"
     clsx: "npm:^2.1.1"
+    embla-carousel-react: "npm:^8.6.0"
     eslint: "npm:^9"
     eslint-config-next: "npm:16.2.1"
     lucide-react: "npm:^1.7.0"
+    motion: "npm:^12.38.0"
     next: "npm:16.2.1"
     next-intl: "npm:^4.8.3"
     radix-ui: "npm:^1.4.3"
@@ -4406,6 +4431,34 @@ __metadata:
   version: 1.5.328
   resolution: "electron-to-chromium@npm:1.5.328"
   checksum: 10c0/284a642ee800f5e1968696a3b00dcc070f556b6a49d0a7df1aa8cf95558344a300724356c060e911c238a683c30ee01596cefc4664744f6a565555c4238b72e6
+  languageName: node
+  linkType: hard
+
+"embla-carousel-react@npm:^8.6.0":
+  version: 8.6.0
+  resolution: "embla-carousel-react@npm:8.6.0"
+  dependencies:
+    embla-carousel: "npm:8.6.0"
+    embla-carousel-reactive-utils: "npm:8.6.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.1 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+  checksum: 10c0/461b0c427a6fca62e730c7b39d08e9c55b01a2138c173d5b9ebf77ec92092a900b45ac384731c77382b48d5d65946994d3abba6e9899a66d6e16f8ddf191ed1c
+  languageName: node
+  linkType: hard
+
+"embla-carousel-reactive-utils@npm:8.6.0":
+  version: 8.6.0
+  resolution: "embla-carousel-reactive-utils@npm:8.6.0"
+  peerDependencies:
+    embla-carousel: 8.6.0
+  checksum: 10c0/33d07e6df4d8dec9b4fc95858838ea2d5e5df078039c05b2a342c05ba4979d8d18564a1c607da445fed744daf969a0b5a90124ce487a854e86ced6f0458b51e9
+  languageName: node
+  linkType: hard
+
+"embla-carousel@npm:8.6.0":
+  version: 8.6.0
+  resolution: "embla-carousel@npm:8.6.0"
+  checksum: 10c0/f4c598e7be28b70340d31ffd2bebb2472db370b0c81d9b089bf9555cf618695f35dc4a0694565c994c9ab972731123063f945aa09ff485df0df761d79c6a08ef
   languageName: node
   linkType: hard
 
@@ -5238,6 +5291,28 @@ __metadata:
   version: 0.2.0
   resolution: "forwarded@npm:0.2.0"
   checksum: 10c0/9b67c3fac86acdbc9ae47ba1ddd5f2f81526fa4c8226863ede5600a3f7c7416ef451f6f1e240a3cc32d0fd79fcfe6beb08fd0da454f360032bde70bf80afbb33
+  languageName: node
+  linkType: hard
+
+"framer-motion@npm:^12.38.0":
+  version: 12.38.0
+  resolution: "framer-motion@npm:12.38.0"
+  dependencies:
+    motion-dom: "npm:^12.38.0"
+    motion-utils: "npm:^12.36.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/bca830d85606ba49e84a1b12fb2b5353622a992809a4ae302084f06fd142e21d790f07ca3678c27e4fb75a8b8e687f42f2ae0cbb13345f2e5730a3fa2c4a5ecf
   languageName: node
   linkType: hard
 
@@ -6710,6 +6785,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"motion-dom@npm:^12.38.0":
+  version: 12.38.0
+  resolution: "motion-dom@npm:12.38.0"
+  dependencies:
+    motion-utils: "npm:^12.36.0"
+  checksum: 10c0/ce41da75c240568abd9708cc859cbffb7d6aa490913619e20d23df57abe232ad6cce961c129933535c92b64bfb886958d73e5d162bcd5ddf174378f869977bbe
+  languageName: node
+  linkType: hard
+
+"motion-utils@npm:^12.36.0":
+  version: 12.36.0
+  resolution: "motion-utils@npm:12.36.0"
+  checksum: 10c0/fe08231759064eef5d351a869379246f1e1b2031bda357a6197d2a99ff6b472bce69f8250212713d8bff2ff46978f354ca8c3b8c8f0c5bd337d26a6793ba42fa
+  languageName: node
+  linkType: hard
+
+"motion@npm:^12.38.0":
+  version: 12.38.0
+  resolution: "motion@npm:12.38.0"
+  dependencies:
+    framer-motion: "npm:^12.38.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/661a08b17592295b267df6a4a4887e9da78b29c310aaf60860fcfa68dac6cf2c39ce03701d6182159ad6f3000f28b8c62c3c6d139e620435d56b3bb5f28c5c1b
+  languageName: node
+  linkType: hard
+
 "ms@npm:^2.1.1, ms@npm:^2.1.3":
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
@@ -7396,7 +7508,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:^15.8.1":
+"prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
   version: 15.8.1
   resolution: "prop-types@npm:15.8.1"
   dependencies:

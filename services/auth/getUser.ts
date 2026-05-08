@@ -1,15 +1,18 @@
 "use server";
-import { cookies } from "next/headers";
-import { User } from "@/lib/interfaces/user";
-import serverAxios from "@/lib/server/serverAxios";
 
-export async function getUser(): Promise<User | null> {
+import { cookies } from "next/headers";
+
+import type { APIResponse } from "@/lib/interfaces/common";
+import { User } from "@/lib/interfaces/user";
+import serverSecurityAxios from "@/lib/server/serverAxios";
+import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
+
+export async function getUser(): Promise<APIResponse<User | null>> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
   if (!token) {
-    return null;
+    return { data: null };
   }
 
-  const response = await serverAxios.get<User>("/me");
-  return response.data;
+  return callAPIWrapper(() => serverSecurityAxios.get<User>("/me"));
 }

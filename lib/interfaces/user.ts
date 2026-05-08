@@ -13,8 +13,8 @@ export enum UserStatus {
   DELETED = "DELETED",
 }
 
+/** Khớp GET /me — MeResponse */
 export interface User {
-  id: string;
   avatar?: string;
   username: string;
   email: string;

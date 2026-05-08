@@ -1,7 +1,9 @@
 "use server";
 
+import type { APIResponse } from "@/lib/interfaces/common";
 import type { BookCollection } from "@/lib/interfaces/collection";
-import serverAxios from "@/lib/server/serverAxios";
+import serverSecurityAxios from "@/lib/server/serverAxios";
+import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 type QueryCollectionsPayload = {
   keyword?: string;
@@ -10,12 +12,13 @@ type QueryCollectionsPayload = {
   limit?: number;
 };
 
-/** GET /collections/ — body: QueryBookCollectionValidation */
+/** GET /collections — query: keyword?, isPublic?, page?, limit? */
 export async function getCollections(
   payload?: QueryCollectionsPayload,
-): Promise<BookCollection[]> {
-  const { data } = await serverAxios.get<BookCollection[]>("/collections/", {
-    data: payload,
-  });
-  return data;
+): Promise<APIResponse<BookCollection[]>> {
+  return callAPIWrapper(() =>
+    serverSecurityAxios.get<BookCollection[]>("/collections", {
+      params: payload,
+    }),
+  );
 }

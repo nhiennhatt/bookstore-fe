@@ -11,7 +11,14 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-const serverAxios = axios.create({
+const serverSecurityAxios = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const serverNoSecurityAxios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
     "Content-Type": "application/json",
@@ -75,7 +82,7 @@ function getSharedRefreshPromise(refreshToken: string): Promise<string> {
   return p;
 }
 
-serverAxios.interceptors.request.use(
+serverSecurityAxios.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
@@ -91,7 +98,7 @@ serverAxios.interceptors.request.use(
   },
 );
 
-serverAxios.interceptors.response.use(
+serverSecurityAxios.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<ErrorResponse>) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
@@ -114,7 +121,7 @@ serverAxios.interceptors.response.use(
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
         }
-        return serverAxios(originalRequest);
+        return serverSecurityAxios(originalRequest);
       } catch (err) {
         return Promise.reject(err);
       }
@@ -123,4 +130,4 @@ serverAxios.interceptors.response.use(
   },
 );
 
-export default serverAxios;
+export default serverSecurityAxios;

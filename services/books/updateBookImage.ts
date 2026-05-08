@@ -2,27 +2,34 @@
 
 import { revalidatePath } from "next/cache";
 
-import serverAxios from "@/lib/server/serverAxios";
+import type { APIResponse } from "@/lib/interfaces/common";
+import serverSecurityAxios from "@/lib/server/serverAxios";
+import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
+/** PUT /books/:id/image — response StringDto */
 export async function updateBookImage(
   bookId: string,
   formData: FormData,
-): Promise<{ result: string } | null> {
-  const { data } = await serverAxios.put<{ result: string } | undefined>(
-    `/books/${bookId}/image`,
-    formData,
-    {
-      transformRequest: [
-        (body, headers) => {
-          if (body instanceof FormData) {
-            delete headers["Content-Type"];
-          }
-          return body;
-        },
-      ],
-    },
+): Promise<APIResponse<{ result: string }>> {
+  const res = await callAPIWrapper(() =>
+    serverSecurityAxios.put<{ result: string }>(
+      `/books/${bookId}/image`,
+      formData,
+      {
+        transformRequest: [
+          (body, headers) => {
+            if (body instanceof FormData) {
+              delete headers["Content-Type"];
+            }
+            return body;
+          },
+        ],
+      },
+    ),
   );
-  revalidatePath(`/management/books/${bookId}`);
-  revalidatePath("/management/books");
-  return data ?? null;
+  if (!res.error) {
+    revalidatePath(`/management/books/${bookId}`);
+    revalidatePath("/management/books");
+  }
+  return res;
 }

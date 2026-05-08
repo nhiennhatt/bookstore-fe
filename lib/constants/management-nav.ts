@@ -20,21 +20,15 @@ export const MANAGEMENT_ROUTES = [
     isOverview: false as const,
   },
   {
-    key: "orders",
-    href: `${MANAGEMENT_BASE}/orders`,
-    label: "Đơn hàng",
-    isOverview: false as const,
-  },
-  {
     key: "collections",
     href: `${MANAGEMENT_BASE}/collections`,
     label: "Bộ sưu tập",
     isOverview: false as const,
   },
   {
-    key: "campaigns",
-    href: `${MANAGEMENT_BASE}/campaigns`,
-    label: "Chiến dịch",
+    key: "orders",
+    href: `${MANAGEMENT_BASE}/orders`,
+    label: "Đơn hàng",
     isOverview: false as const,
   },
   {

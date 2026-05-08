@@ -1,7 +1,9 @@
 export { getBooks } from "./getBooks";
+export { getBook } from "./getBook";
 export { createBook } from "./createBook";
 export { updateBookImage } from "./updateBookImage";
 export { updateBook } from "./updateBook";
 export type { UpdateBookPayload } from "./updateBook";
 export { updateBookCategory } from "./updateBookCategory";
 export { deleteBook } from "./deleteBook";
+export { getBookBySlug } from "./getBookBySlug";

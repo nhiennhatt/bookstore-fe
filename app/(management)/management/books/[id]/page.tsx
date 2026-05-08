@@ -7,13 +7,13 @@ export default async function BookDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  try {
-    const { id } = await params;
+  const { id } = await params;
 
-    const book = await getBook(id);
-    if (book) return <BookDetailBase book={book} />;
-  } catch (error) {
+  const { data: book, error } = await getBook(id);
+  if (error || !book) {
     console.error(error);
+    return notFound();
   }
-  return notFound();
+
+  return <BookDetailBase book={book} />;
 }

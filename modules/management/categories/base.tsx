@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 const MOCK_THUMBS = ["/default_avatar.webp", "/logo.webp"];
 
 const SEARCH_DEBOUNCE_MS = 300;
+type CreateCategoryInput = Omit<Category, "id">;
 
 export function CategoriesBase() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -70,11 +71,16 @@ export function CategoriesBase() {
       setIsLoadingMore(true);
       try {
         const cursorToUse = shouldReset ? null : nextCursorRef.current;
-        const items = await getCategories({
+        const res = await getCategories({
           cursor: cursorToUse,
           keyword: debouncedKeyword || undefined,
           limit: CATEGORIES_PAGE_SIZE,
         });
+        if (res.error) {
+          console.error(res.error);
+          return;
+        }
+        const items = res.data;
 
         const pageFull = items.length === CATEGORIES_PAGE_SIZE;
         const tailId =
@@ -159,9 +165,13 @@ export function CategoriesBase() {
     if (!open) setEditingId(null);
   };
 
-  const handleCreateSubmit = async (payload: Omit<Category, "id">) => {
-    const created = await createCategory(payload);
-    setCategories((prev) => [created, ...prev]);
+  const handleCreateSubmit = async (payload: CreateCategoryInput) => {
+    const res = await createCategory(payload);
+    if (res.error || !res.data) {
+      console.error(res.error);
+      return;
+    }
+    setCategories((prev) => [res.data, ...prev]);
   };
 
   const handleCategoryUpdated = (
@@ -192,11 +202,13 @@ export function CategoriesBase() {
     const ok = window.confirm(`Xoá danh mục "${target.name}"?`);
     if (!ok) return;
 
-    deleteCategory(id)
-      .then(() => {
-        setCategories((prev) => prev.filter((c) => c.id !== id));
-      })
-      .catch((error) => console.error(error));
+    void deleteCategory(id).then((res) => {
+      if (res.error) {
+        console.error(res.error);
+        return;
+      }
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+    });
 
     setSelectedIds((prev) => {
       if (!prev.has(id)) return prev;
@@ -213,12 +225,15 @@ export function CategoriesBase() {
 
     const ids = Array.from(selectedIds);
 
-    Promise.all(ids.map((id) => deleteCategory(id)))
-      .then(() => {
-        const idSet = new Set(ids);
-        setCategories((prev) => prev.filter((c) => !idSet.has(c.id)));
-      })
-      .catch((error) => console.error(error));
+    void Promise.all(ids.map((id) => deleteCategory(id))).then((results) => {
+      const failed = results.find((r) => r.error);
+      if (failed?.error) {
+        console.error(failed.error);
+        return;
+      }
+      const idSet = new Set(ids);
+      setCategories((prev) => prev.filter((c) => !idSet.has(c.id)));
+    });
 
     setSelectedIds(new Set());
   };
@@ -290,6 +305,7 @@ export function CategoriesBase() {
             </TableHead>
             <TableHead>Tên danh mục</TableHead>
             <TableHead>Công khai</TableHead>
+            <TableHead>Nổi bật</TableHead>
             <TableHead>Ảnh đại diện</TableHead>
             <TableHead>Slug</TableHead>
             <TableHead className="w-28 text-right">Tác vụ</TableHead>
@@ -305,6 +321,9 @@ export function CategoriesBase() {
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-40 max-w-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 rounded-full" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-5 w-16 rounded-full" />
@@ -340,6 +359,13 @@ export function CategoriesBase() {
                       <Badge variant="default">Công khai</Badge>
                     ) : (
                       <Badge variant="secondary">Riêng tư</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {c.featured ? (
+                      <Badge>Nổi bật</Badge>
+                    ) : (
+                      <Badge variant="outline">Thường</Badge>
                     )}
                   </TableCell>
                   <TableCell>
@@ -385,7 +411,7 @@ export function CategoriesBase() {
           {!showInitialSkeleton && categories.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="text-center text-muted-foreground py-10"
               >
                 {debouncedKeyword
