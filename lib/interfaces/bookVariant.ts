@@ -13,6 +13,7 @@ export interface BookVariant {
   salePrice?: number;
   inventory?: number;
   image?: string;
+  weight?: number;
   status: BookVariantStatus;
   bookId: string;
 }

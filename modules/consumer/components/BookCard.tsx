@@ -6,25 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CollectionBookOverview } from "@/lib/interfaces/collection-book";
 import Link from "next/link";
+import { formatPrice } from "@/lib/utils";
 
 interface BookCardProps {
   book: CollectionBookOverview;
   variant?: "normal" | "featured";
 }
 
-const formatPrice = (value?: number) => {
-  if (!value || value <= 0) {
-    return "Liên hệ";
-  }
-  return `${value.toLocaleString("vi-VN")}đ`;
-};
-
 export function BookCard({ book, variant = "normal" }: BookCardProps) {
   return (
     <Link href={`/books/${book.book.slug}`}>
       <motion.div
         whileHover={{ y: -8 }}
-        className={`group flex flex-col bg-white rounded-2xl border border-border/30 overflow-hidden shadow-sm hover:shadow-md transition-all ${variant === "normal" ? "max-w-[260px] w-[260px]" : "max-w-[280px] w-[280px]"}`}
+        className={`group flex flex-col bg-white rounded-2xl border border-border/30 overflow-hidden shadow-sm hover:shadow-md transition-all w-full`}
       >
         <div className="aspect-2/3 relative overflow-hidden bg-muted">
           <img
@@ -53,12 +47,12 @@ export function BookCard({ book, variant = "normal" }: BookCardProps) {
           <p className="text-sm text-cool-slate mt-1 mb-4 grow line-clamp-1 text-ellipsis">
             Tác giả {book.book.author ?? "Đang cập nhật"}
           </p>
-  
+
           <Separator className="mb-4 bg-border/50" />
-  
+
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-deep-charcoal">
-              {formatPrice(book.book.salePrice)}
+              {formatPrice(book.book.salePrice ?? 0) ?? "Liên hệ"}
             </span>
             <Button
               variant="link"

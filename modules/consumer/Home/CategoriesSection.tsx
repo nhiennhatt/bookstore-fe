@@ -8,7 +8,7 @@ export async function CategoriesSection() {
   let categories: Category[] = [];
   const res = await getCategories({
     isPublic: true,
-    limit: 10,
+    limit: 9,
   });
   if (res.error) {
     console.error("CategoriesSection:", res.error);

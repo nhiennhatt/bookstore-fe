@@ -24,3 +24,9 @@ export interface User {
   lastName?: string;
   verified: boolean;
 }
+
+/** PUT /me — UpdateUserInform */
+export interface UpdateUserPayload {
+  firstName?: string;
+  lastName?: string;
+}

@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
-import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { Button } from "@/components/ui/button";
-import { ScrollBar } from "@/components/ui/scroll-area";
 import { BookStatus } from "@/lib/interfaces/book";
 import type { BookCollection } from "@/lib/interfaces/collection";
 import type { CollectionBookOverview } from "@/lib/interfaces/collection-book";
 import { BookVariantStatus } from "@/lib/interfaces/bookVariant";
 import { getCollectionBooks } from "@/services/collections/getCollectionBooks";
 import { BookCard } from "./BookCard";
-
-const SCROLL_STEP = 350;
+import {
+  Carousel,
+  CarouselApi,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Link from "next/link";
 
 export function CollectionItem({
   isFeatured = false,
@@ -22,9 +25,11 @@ export function CollectionItem({
   isFeatured?: boolean;
   collection: BookCollection;
 }) {
-  const areaScrollRef = useRef<HTMLDivElement>(null);
   const [books, setBooks] = useState<CollectionBookOverview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(true);
+  const [canScrollNext, setCanScrollNext] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -65,41 +70,52 @@ export function CollectionItem({
     };
   }, [collection.id]);
 
-  const handleScrollToRight = () => {
-    if (areaScrollRef.current) {
-      areaScrollRef.current.scrollBy({ left: SCROLL_STEP, behavior: "smooth" });
-    }
-  };
+  const next = useCallback(() => {
+    carouselApi?.scrollNext();
+  }, [carouselApi]);
 
-  const handleScrollToLeft = () => {
-    if (areaScrollRef.current) {
-      areaScrollRef.current.scrollBy({
-        left: -SCROLL_STEP,
-        behavior: "smooth",
-      });
-    }
-  };
+  const prev = useCallback(() => {
+    carouselApi?.scrollPrev();
+  }, [carouselApi]);
+
+  useEffect(() => {
+    if (!carouselApi || isLoading) return;
+    const calculateCanScroll = () => {
+      setCanScrollPrev(carouselApi.canScrollPrev());
+      setCanScrollNext(carouselApi.canScrollNext());
+    };
+
+    calculateCanScroll();
+
+    const addEventListeners = () => {
+      carouselApi.on("scroll", calculateCanScroll);
+    };
+    addEventListeners();
+    return () => {
+      carouselApi.off("scroll", calculateCanScroll);
+    };
+  }, [carouselApi, isLoading]);
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
-      <div
-        className="flex flex-col md:flex-row items-end justify-between gap-6 mb-10"
-      >
+      <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-10">
         <h2 className="text-3xl md:text-4xl font-bold">{collection.name}</h2>
         <div className="flex gap-2">
           <Button
             variant="outline"
+            disabled={!canScrollPrev}
             size="icon"
             className="rounded-full h-12 w-12 border-border/50 bg-white shadow-sm hover:border-electric-indigo hover:text-electric-indigo transition-colors"
-            onClick={handleScrollToLeft}
+            onClick={prev}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Button
             variant="outline"
+            disabled={!canScrollNext}
             size="icon"
             className="rounded-full h-12 w-12 border-border/50 bg-white shadow-sm hover:border-electric-indigo hover:text-electric-indigo transition-colors"
-            onClick={handleScrollToRight}
+            onClick={next}
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
@@ -108,36 +124,43 @@ export function CollectionItem({
 
       <div className="relative">
         {isLoading && (
-          <p className="mb-4 text-sm text-cool-slate">Đang tải sách trong bộ sưu tập...</p>
+          <p className="mb-4 text-sm text-cool-slate">
+            Đang tải sách trong bộ sưu tập...
+          </p>
         )}
-        <ScrollAreaPrimitive.Root className="w-full whitespace-nowrap pb-6">
-          <ScrollAreaPrimitive.Viewport
-            ref={areaScrollRef}
-            className="h-full w-full rounded-[inherit]"
-          >
-            <div className="flex w-max space-x-6 py-2.5 px-2.5">
-              {books.map((book) => (
+        <Carousel
+          className="w-full whitespace-nowrap pb-6"
+          setApi={setCarouselApi}
+        >
+          <CarouselContent>
+            {books.map((book) => (
+              <CarouselItem
+                key={book.id}
+                className="basis-1/4 md:basis-1/5 py-3"
+              >
                 <BookCard
-                  key={book.id}
                   book={book}
                   variant={isFeatured ? "featured" : "normal"}
                 />
-              ))}
-              {books.length > 0 && (
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="flex flex-col items-center justify-center min-w-[280px] w-[280px] bg-transparent border-2 border-dashed border-cool-slate/30 rounded-2xl cursor-pointer hover:border-electric-indigo hover:bg-electric-indigo/5 transition-all group"
-                >
-                  <ArrowRight className="h-10 w-10 text-cool-slate mb-4 group-hover:text-electric-indigo group-hover:translate-x-2 transition-all" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-deep-charcoal">
-                    Xem tất cả gợi ý
-                  </span>
-                </motion.div>
-              )}
-            </div>
-            <ScrollBar orientation="horizontal" className="hidden" />
-          </ScrollAreaPrimitive.Viewport>
-        </ScrollAreaPrimitive.Root>
+              </CarouselItem>
+            ))}
+            {books.length > 0 && (
+              <CarouselItem className="basis-1/4 md:basis-1/5 py-3">
+                <Link href={`/collections/${collection.id}`}>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="h-full flex flex-col items-center justify-center min-w-[280px] w-[280px] bg-transparent border-2 border-dashed border-cool-slate/30 rounded-2xl cursor-pointer hover:border-electric-indigo hover:bg-electric-indigo/5 transition-all group"
+                  >
+                    <ArrowRight className="h-10 w-10 text-cool-slate mb-4 group-hover:text-electric-indigo group-hover:translate-x-2 transition-all" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-deep-charcoal">
+                      Xem tất cả gợi ý
+                    </span>
+                  </motion.div>
+                </Link>
+              </CarouselItem>
+            )}
+          </CarouselContent>
+        </Carousel>
         {books.length === 0 && (
           <p className="text-sm text-cool-slate">
             Chưa có sách trong bộ sưu tập này.

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Poltawski_Nowy, JetBrains_Mono } from "next/font/google";
 
-import { UserProvider } from "@/components/commons/UserProvider";
+import { AppProvider } from "@/components/commons/AppProvider";
 import { cn } from "@/lib/utils/cn";
 
 import "./globals.css";
@@ -43,7 +43,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <UserProvider>{children}</UserProvider>
+        <AppProvider>{children}</AppProvider>
       </body>
     </html>
   );
