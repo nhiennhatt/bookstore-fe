@@ -3,6 +3,8 @@ import type { User } from "./user";
 
 export enum OrderStatus {
   PAYING = "PAYING",
+  PREPARING = "PREPARING",
+  PREPARED = "PREPARED",
   SHIPPING = "SHIPPING",
   DONE = "DONE",
   CANCELLED = "CANCELLED",
@@ -11,21 +13,21 @@ export enum OrderStatus {
 /** components/schemas/Order */
 export interface Order {
   id: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   address?: UserAddress;
   addressId?: string;
-  userId?: string;
+  userId: string;
   status: OrderStatus;
   deliveryCode?: string;
   paymentCode?: string;
-  totalWeight?: number;
+  totalWeight: number;
   paymentClientSecret?: string;
-  subtotalPrice?: number;
+  subtotalPrice: number;
   shippingFee?: number;
-  orderDiscount?: number;
-  shippingDiscount?: number;
-  grandTotal?: number;
+  orderDiscount: number;
+  shippingDiscount: number;
+  grandTotal: number;
 }
 
 export interface OrderDetailDto {
@@ -39,6 +41,7 @@ export interface OrderDetailDto {
   originUnitPrice: number;
   unitPrice: number;
   totalPrice: number;
+  isbn: string;
   image?: string;
 }
 

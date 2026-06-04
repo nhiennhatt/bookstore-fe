@@ -1,3 +1,5 @@
+import { Overview } from "@/modules/management/overview";
+
 export default function ManagementPage() {
-  return <div>ManagementPage</div>;
+  return <Overview />;
 }

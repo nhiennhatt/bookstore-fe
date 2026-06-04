@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Search,
-  Heart,
-  ShoppingCart,
-  User,
-  Menu,
-  LogOut,
-  List,
-} from "lucide-react";
+import { Search, ShoppingCart, User, Menu, LogOut, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLoadUser, useUser } from "@/hooks";
@@ -43,7 +35,7 @@ export function AppNavbar() {
             href="/"
             className="text-2xl font-bold tracking-tighter text-deep-charcoal"
           >
-            Lumina
+            Bookshop
           </a>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
             <a

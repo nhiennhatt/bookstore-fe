@@ -36,6 +36,7 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { useUser } from "@/hooks";
 
 const ROUTE_ICONS: Record<ManagementRouteKey, LucideIcon> = {
   overview: LayoutDashboard,
@@ -49,6 +50,7 @@ const ROUTE_ICONS: Record<ManagementRouteKey, LucideIcon> = {
 };
 
 export function ManagementSidebar() {
+  const [user] = useUser();
   const pathname = usePathname();
 
   return (
@@ -78,28 +80,31 @@ export function ManagementSidebar() {
           <SidebarGroupLabel>Manage</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {MANAGEMENT_ROUTES.map((item) => {
-                const active = managementPathMatches(
-                  pathname,
-                  item.href,
-                  item.isOverview,
-                );
-                const Icon = ROUTE_ICONS[item.key];
-                return (
-                  <SidebarMenuItem key={item.key}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={item.label}
-                    >
-                      <Link href={item.href}>
-                        <Icon />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {user &&
+                MANAGEMENT_ROUTES.filter((item) =>
+                  item.allowedRoles.includes(user.role),
+                ).map((item) => {
+                  const active = managementPathMatches(
+                    pathname,
+                    item.href,
+                    item.isOverview,
+                  );
+                  const Icon = ROUTE_ICONS[item.key];
+                  return (
+                    <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.label}
+                      >
+                        <Link href={item.href}>
+                          <Icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

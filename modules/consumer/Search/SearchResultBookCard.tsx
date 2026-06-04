@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { BookOverview } from "@/lib/interfaces/book";
+import { formatPrice } from "@/lib/utils";
 
 type SearchResultBookCardProps = {
   book: BookOverview;
@@ -44,7 +45,7 @@ export function SearchResultBookCard({
         </p>
         <div className="flex items-center justify-between">
           <span className="font-bold text-electric-indigo">
-            {book.salePrice}
+            {formatPrice(book.salePrice ?? 0)}
           </span>
           <Badge
             variant="outline"

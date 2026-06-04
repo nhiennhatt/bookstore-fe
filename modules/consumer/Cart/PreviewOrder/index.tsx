@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ShoppingCart, User } from "lucide-react";
 import { UserAddress } from "@/lib/interfaces/address";
 import Link from "next/link";
 import { getAddresses } from "@/services/me";
@@ -14,8 +14,12 @@ import { PaymentMethodSection } from "./PaymentMethodSection";
 import { OrderSummary } from "./OrderSummary";
 import { createOrder } from "@/services/orders";
 import { useRouter } from "next/navigation";
+import { useLoadingUser, useUser } from "@/hooks";
+import { Button } from "@/components/ui/button";
 
 export function CartPreview() {
+  const [user] = useUser();
+  const [loadingUser] = useLoadingUser();
   const { cart, clearCart } = useCart();
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
@@ -78,6 +82,39 @@ export function CartPreview() {
           Giỏ hàng trống
         </h2>
       </div>
+    );
+  }
+
+  if (loadingUser) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <main className="grow py-16 px-4 md:px-8 bg-background">
+        <div className="max-w-6xl mx-auto">
+          <header className="mb-12 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-deep-charcoal mb-4 text-center">
+                Vui lòng đăng nhập để tiếp tục
+              </h1>
+              <p className="text-lg text-cool-slate leading-relaxed">
+                Bạn cần đăng nhập để tiếp tục thanh toán đơn hàng.
+              </p>
+              <Button
+                asChild
+                className="rounded-xl bg-deep-charcoal hover:bg-deep-charcoal/90 text-white font-bold px-8 h-14 uppercase tracking-widest text-xs my-6"
+              >
+                <Link href="/auth">Đăng nhập</Link>
+              </Button>
+            </motion.div>
+          </header>
+        </div>
+      </main>
     );
   }
 

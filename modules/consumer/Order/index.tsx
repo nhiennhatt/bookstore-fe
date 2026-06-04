@@ -21,6 +21,7 @@ export function Order({ id }: { id: string }) {
       const response = await getOrderById(id);
       if (response.error || !response.data) return;
       setOrder(response.data);
+      console.log(response.data)
     };
     fetchOrder().finally(() => setLoadingOrder(false));
   }, [id]);
