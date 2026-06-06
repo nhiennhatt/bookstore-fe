@@ -8,7 +8,6 @@ import { BookOverview } from "@/lib/interfaces/book";
 import { SearchHeader } from "./SearchHeader";
 import { CategoryFilters } from "./CategoryFilters";
 import { SearchResults } from "./SearchResults";
-import { useRouter } from "next/navigation";
 
 const CATEGORIES_PER_PAGE = 4;
 const BOOKS_PER_PAGE = 12;
@@ -146,6 +145,7 @@ export function Search({
     setKeyword(null);
     setKeywordDraft(null);
     setSelectedCategory(null);
+    setSelectedCategorySlug(null);
   }, []);
 
   return (

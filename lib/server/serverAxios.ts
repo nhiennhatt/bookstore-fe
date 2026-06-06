@@ -66,10 +66,12 @@ serverSecurityAxios.interceptors.request.use(async (config) => {
   const userCookies = await cookies();
   const connectionString = userCookies.get("connectionString");
   if (!connectionString) throw new Error("No connection string found");
-  const token = await getValidToken(connectionString.value);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  try {
+    const token = await getValidToken(connectionString.value);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {}
   return config;
 });
 

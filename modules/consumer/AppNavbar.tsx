@@ -31,14 +31,14 @@ export function AppNavbar() {
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
         <div className="flex items-center gap-8">
-          <a
+          <Link
             href="/"
             className="text-2xl font-bold tracking-tighter text-deep-charcoal"
           >
             Bookshop
-          </a>
+          </Link>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <a
+            <Link
               href="/collections"
               className={cn(
                 "text-cool-slate hover:text-deep-charcoal transition-colors",
@@ -48,8 +48,8 @@ export function AppNavbar() {
               )}
             >
               Bộ sưu tập
-            </a>
-            <a
+            </Link>
+            <Link
               href="/categories"
               className={cn(
                 "text-cool-slate hover:text-deep-charcoal transition-colors",
@@ -57,7 +57,7 @@ export function AppNavbar() {
               )}
             >
               Danh mục
-            </a>
+            </Link>
           </div>
         </div>
 

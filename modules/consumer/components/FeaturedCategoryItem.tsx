@@ -56,7 +56,6 @@ export function FeaturedCategoryItem({ category }: { category: Category }) {
           categoryId: category.id,
           limit: BOOKS_PER_CATEGORY_LIMIT,
         });
-        console.log(booksRes.data);
         if (mounted) {
           if (booksRes.error || !booksRes.data) {
             setBooks([]);

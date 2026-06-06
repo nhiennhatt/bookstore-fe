@@ -3,9 +3,9 @@ import { Inter, Poltawski_Nowy, JetBrains_Mono } from "next/font/google";
 
 import { AppProvider } from "@/components/commons/AppProvider";
 import { cn } from "@/lib/utils/cn";
-import SetConnectionClient from '@/components/SetConnectionClient';
 
 import "./globals.css";
+import generateConnection from "@/services/auth/generateConnection";
 
 const poltawskiNowy = Poltawski_Nowy({
   subsets: ["vietnamese"],

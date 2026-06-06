@@ -10,12 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { login } from "@/services/auth/login";
 import { cn } from "@/lib/utils/cn";
-import { loginSchema } from "@/lib/validations/auth";
-import z from "zod";
+import { loginSchema, registerSchema } from "@/lib/validations/auth";
+import z, { email } from "zod";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { useUser, useLoadingUser } from "@/hooks";
 import { useRouter } from "next/navigation";
 import { useLoadUser } from "@/hooks";
+import { register } from "@/services/auth/register";
+import { toast } from "sonner";
 
 function InputField({
   label,
@@ -59,6 +61,7 @@ export function Auth() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [currentTab, setCurrentTab] = useState("signin");
 
   const handleLogin = async () => {
     let parsedData: z.infer<typeof loginSchema>;
@@ -92,6 +95,31 @@ export function Auth() {
     }
     await loadUser();
     router.push("/");
+  };
+
+  const handleRegister = async () => {
+    try {
+      const parsedData = registerSchema.parse({
+        email: signupEmail,
+        username: signupUsername,
+        password: signupPassword,
+      });
+      const registerRes = await register(parsedData);
+      if (registerRes.error) {
+        setErrors({
+          signupUsername: registerRes.error.title ?? "Đăng ký thất bại.",
+        });
+        return;
+      }
+      setSigninUsername("");
+      setSigninPassword("");
+      setSignupUsername("");
+      setSignupEmail("");
+      setSignupPassword("");
+      setErrors({});
+      setCurrentTab("signin");
+      toast("Đăng ký thành công");
+    } catch (error) {}
   };
 
   const tabPanelClass =
@@ -129,7 +157,11 @@ export function Auth() {
             </p>
           </div>
 
-          <Tabs defaultValue="signin" className="gap-6">
+          <Tabs
+            className="gap-6"
+            value={currentTab}
+            onValueChange={setCurrentTab}
+          >
             <TabsList className="grid w-full grid-cols-2 duration-200">
               <TabsTrigger
                 value="signin"
@@ -225,7 +257,12 @@ export function Auth() {
                   onChange={(e) => setSignupPassword(e.target.value)}
                   error={errors.signupPassword}
                 />
-                <Button type="submit" className="mt-1 w-full" size="lg">
+                <Button
+                  onClick={handleRegister}
+                  type="submit"
+                  className="mt-1 w-full"
+                  size="lg"
+                >
                   Đăng ký
                 </Button>
               </form>
