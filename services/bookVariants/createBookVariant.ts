@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 
 import type { APIResponse } from "@/lib/interfaces/common";
-import type { BookVariant, BookVariantStatus } from "@/lib/interfaces/bookVariant";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import type {
+  BookVariant,
+  BookVariantStatus,
+} from "@/lib/interfaces/bookVariant";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 export type CreateBookVariantPayload = {

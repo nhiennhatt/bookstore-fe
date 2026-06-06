@@ -2,7 +2,7 @@
 
 import type { APIResponse } from "@/lib/interfaces/common";
 import { Category } from "@/lib/interfaces/category";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 /** GET /categories — query: cursor?, keyword?, limit?, isPublic?, isFeatured? */

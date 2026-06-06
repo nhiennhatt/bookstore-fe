@@ -13,9 +13,6 @@ export async function register(
   payload: CreateUserPayload,
 ): Promise<APIResponse<CreateUserResponse>> {
   return callAPIWrapper(() =>
-    serverNoSecurityAxios.post<CreateUserResponse>(
-      "/auth/register",
-      payload,
-    ),
+    serverNoSecurityAxios.post<CreateUserResponse>("/auth/register", payload),
   );
 }

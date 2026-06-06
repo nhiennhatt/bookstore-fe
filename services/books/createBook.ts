@@ -2,7 +2,7 @@
 
 import type { Book } from "@/lib/interfaces/book";
 import type { APIResponse } from "@/lib/interfaces/common";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 type CreateBookPayload = Pick<

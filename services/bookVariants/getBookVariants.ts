@@ -2,7 +2,7 @@
 
 import type { APIResponse } from "@/lib/interfaces/common";
 import type { BookVariant } from "@/lib/interfaces/bookVariant";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 /** GET /variants?bookid= — OpenAPI */

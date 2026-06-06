@@ -2,7 +2,7 @@
 
 import type { APIResponse } from "@/lib/interfaces/common";
 import type { Order, OrderStatus } from "@/lib/interfaces/order";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 /** GET /orders — danh sách đơn (admin / nội bộ theo backend) */

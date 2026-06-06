@@ -1,7 +1,7 @@
 "use server";
 
 import type { APIResponse } from "@/lib/interfaces/common";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 /**
@@ -14,8 +14,11 @@ export async function updateCollectionBookPosition(
   position: number,
 ): Promise<APIResponse<void>> {
   return callAPIWrapper(() =>
-    serverSecurityAxios.put<void>(`/collections/${collectionId}/books/${bookId}`, {
-      position,
-    }),
+    serverSecurityAxios.put<void>(
+      `/collections/${collectionId}/books/${bookId}`,
+      {
+        position,
+      },
+    ),
   );
 }

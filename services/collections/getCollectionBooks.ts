@@ -4,7 +4,7 @@ import type { BookStatus } from "@/lib/interfaces/book";
 import type { BookVariantStatus } from "@/lib/interfaces/bookVariant";
 import type { APIResponse } from "@/lib/interfaces/common";
 import type { CollectionBookOverview } from "@/lib/interfaces/collection-book";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 /** GET /collections/{id}/books — OpenAPI */

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 import type { APIResponse } from "@/lib/interfaces/common";
 import { User } from "@/lib/interfaces/user";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 export async function getUser(): Promise<APIResponse<User | null>> {

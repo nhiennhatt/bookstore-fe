@@ -1,15 +1,11 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { decodeJwt } from "jose";
 
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { LoginResponse } from "../interfaces/auth";
-import { ErrorResponse } from "../interfaces/common";
-
-interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
-  _retry?: boolean;
-}
+import axios from "axios";
+import { getToken } from "@/services/auth/getToken";
+const connectionLocks = new Map<string, Promise<string>>();
 
 const serverSecurityAxios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -18,116 +14,63 @@ const serverSecurityAxios = axios.create({
   },
 });
 
-export const serverNoSecurityAxios = axios.create({
+const serverNoSecurityAxios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-const refreshInFlight = new Map<string, Promise<string>>();
+async function getValidToken(connectionString: string): Promise<string> {
+  const existingLock = connectionLocks.get(connectionString);
+  if (existingLock) return existingLock;
 
-const sessionCookieOptions = {
-  httpOnly: true,
-  sameSite: true as const,
-  path: "/",
-};
-
-async function performTokenRefresh(refreshToken: string): Promise<string> {
-  const { data } = await axios.post<LoginResponse>(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/token`,
-    { refreshToken },
-    { headers: { "Content-Type": "application/json" } },
-  );
-  try {
-    const cookieStore = await cookies();
-    cookieStore.set("token", data.token, sessionCookieOptions);
-    cookieStore.set("refreshToken", data.refreshToken, sessionCookieOptions);
-  } catch {
-    // Chỉ Server Action / Route Handler được ghi cookie. Gọi serverAxios từ RSC
-    // hoặc chuỗi khác có thể refresh token nhưng không được set cookie — vẫn trả
-    // token để retry request hiện tại thành công.
-  }
-  return data.token;
-}
-
-async function onRefreshFailure(): Promise<void> {
-  try {
-    const cookieStore = await cookies();
-    cookieStore.delete("token");
-    cookieStore.delete("refreshToken");
-    revalidatePath("/", "layout");
-  } catch {
-    // Chỉ Server Action / Route Handler được ghi cookie. Gọi serverAxios từ RSC
-    // hoặc chuỗi khác có thể refresh token nhưng không được set cookie — vẫn trả
-    // token để retry request hiện tại thành công.
-  }
-}
-
-function getSharedRefreshPromise(refreshToken: string): Promise<string> {
-  let p = refreshInFlight.get(refreshToken);
-  if (p) return p;
-
-  p = performTokenRefresh(refreshToken)
-    .catch(async (err) => {
-      console.error(err);
-      await onRefreshFailure();
-      throw err;
-    })
-    .finally(() => {
-      refreshInFlight.delete(refreshToken);
+  const userCookies = await cookies();
+  const token = userCookies.get("accessToken")?.value;
+  if (!token || isTokenExpiredInMinutes(token, 5)) {
+    const refreshToken = userCookies.get("refreshToken")?.value;
+    if (!refreshToken) throw new Error("No refresh token found");
+    const res = await getToken(refreshToken);
+    if (res.error || !res.data) throw new Error(res.error?.errorCode);
+    userCookies.set("accessToken", res.data.token, {
+      sameSite: "lax",
+      httpOnly: true,
+      path: "/",
     });
 
-  refreshInFlight.set(refreshToken, p);
-  return p;
+    userCookies.set("refreshToken", res.data.refreshToken, {
+      sameSite: "lax",
+      httpOnly: true,
+      path: "/",
+    });
+    connectionLocks.delete(connectionString);
+    return res.data.token;
+  } else {
+    return token;
+  }
 }
 
-serverSecurityAxios.interceptors.request.use(
-  async (config: InternalAxiosRequestConfig) => {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+function isTokenExpiredInMinutes(token: string, minutes: number): boolean {
+  try {
+    const decoded = decodeJwt(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (!decoded.exp) return true;
+    return decoded.exp < currentTime + minutes * 60;
+  } catch (error) {
+    console.error(error);
+    return true;
+  }
+}
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+serverSecurityAxios.interceptors.request.use(async (config) => {
+  const userCookies = await cookies();
+  const connectionString = userCookies.get("connectionString");
+  if (!connectionString) throw new Error("No connection string found");
+  const token = await getValidToken(connectionString.value);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-    return config;
-  },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  },
-);
-
-serverSecurityAxios.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError<ErrorResponse>) => {
-    const originalRequest = error.config as CustomAxiosRequestConfig;
-    if (
-      error.response?.status === 401 &&
-      error.response?.data?.errorCode === "TOKEN_EXPIRED" &&
-      originalRequest &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
-
-      const cookieStore = await cookies();
-      const refreshToken = cookieStore.get("refreshToken")?.value;
-      if (!refreshToken) {
-        return Promise.reject(error);
-      }
-
-      try {
-        const newToken = await getSharedRefreshPromise(refreshToken);
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        }
-        return serverSecurityAxios(originalRequest);
-      } catch (err) {
-        return Promise.reject(err);
-      }
-    }
-    return Promise.reject(error);
-  },
-);
-
-export default serverSecurityAxios;
+export { serverSecurityAxios, serverNoSecurityAxios };

@@ -2,7 +2,7 @@
 
 import type { APIResponse } from "@/lib/interfaces/common";
 import type { BookCollection } from "@/lib/interfaces/collection";
-import serverSecurityAxios from "@/lib/server/serverAxios";
+import { serverSecurityAxios } from "@/lib/server/serverAxios";
 import { callAPIWrapper } from "@/lib/utils/callAPIWrapper";
 
 type CreateCollectionPayload = Pick<BookCollection, "name" | "public">;
