@@ -5,3 +5,5 @@ export { updateMe } from "./updateMe";
 export { updateAddress } from "./updateAddress";
 export { deleteAddress } from "./deleteAddress";
 export { setDefaultAddress } from "./setDefaultAddress";
+export { sendVerifyCode } from "./sendVerifyCode";
+export { verifyAccount } from "./verifyAccount";

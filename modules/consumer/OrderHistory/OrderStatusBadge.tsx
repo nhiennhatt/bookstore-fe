@@ -7,6 +7,8 @@ const statusBadgeClass: Record<OrderStatus, string> = {
   [OrderStatus.PAYING]: "bg-amber-50 text-amber-600 border-amber-100",
   [OrderStatus.SHIPPING]: "bg-blue-50 text-blue-600 border-blue-100",
   [OrderStatus.CANCELLED]: "bg-red-50 text-red-600 border-red-100",
+  [OrderStatus.PREPARING]: "",
+  [OrderStatus.PREPARED]: ""
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {

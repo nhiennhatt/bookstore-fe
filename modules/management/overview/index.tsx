@@ -1,70 +1,14 @@
 "use client";
-
-import Chart from "react-apexcharts";
-import { ApexOptions, ApexPlotOptions } from "apexcharts";
-import { formatPrice } from "@/lib/utils";
+import Image from "next/image";
 
 export function Overview() {
-  const options: ApexOptions = {
-    chart: {
-      id: "chart",
-    },
-    series: [
-      { data: [220900, 1038300, 0], name: "DONE" },
-      { data: [0, 0, 260500], name: "PAYING" },
-      { data: [0, 161500, 361000], name: "PREPARING" },
-    ],
-    xaxis: {
-      categories: [
-        "2026-05-17T17:00:00Z",
-        "2026-05-18T17:00:00Z",
-        "2026-05-19T17:00:00Z",
-      ],
-      title: { text: "Ngày" },
-    },
-    plotOptions: {
-      bar: {
-        columnWidth: 20,
-        borderRadiusApplication: "around",
-        borderRadius: 10,
-        dataLabels: {
-          position: "top",
-          orientation: "vertical",
-        },
-      },
-    },
-    dataLabels: {
-      enabled: true,
-      style: {
-        colors: ["oklch(70.8% 0 0)"],
-      },
-      offsetY: 10,
-      formatter: function (value) {
-        if (Number.isInteger(value)) {
-          const valueInt = value as number;
-          if (valueInt < 1000) {
-            return value;
-          } else if (valueInt < 1000000) {
-            return (valueInt / 1000).toFixed(2) + "K";
-          } else if (valueInt < 1000000000) {
-            return (valueInt / 1000000).toFixed(2) + "M";
-          }
-          return (valueInt / 1000000000).toFixed(2) + "B";
-        }
-        return value;
-      },
-    },
-  };
-
   return (
     <div>
-      <div className="max-w-4xl bg-white rounded-2xl p-3 border border-neutral-200">
-        <Chart
-          options={options}
-          height="380"
-          type="bar"
-          series={options.series}
-        />
+      <div className="w-full bg-white rounded-2xl p-3 border border-neutral-200 flex flex-col justify-center items-center">
+        <div className="max-w-xl aspect-video">
+          <Image alt="" height={800} width={800} src="/cooming_soon.svg" className="w-full h-full object-contain object-center"/>
+        </div>
+        <h1 className="text-xl">Tính năng đang phát triển!</h1>
       </div>
     </div>
   );

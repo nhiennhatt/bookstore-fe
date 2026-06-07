@@ -35,7 +35,6 @@ export const MANAGEMENT_ROUTES: {
     allowedRoles: [
       UserRole.ADMIN,
       UserRole.CONTENT_MANAGER,
-      UserRole.INVENTORY_MANAGER,
     ],
   },
   {
@@ -52,27 +51,27 @@ export const MANAGEMENT_ROUTES: {
     isOverview: false as const,
     allowedRoles: [UserRole.ADMIN, UserRole.INVENTORY_MANAGER],
   },
-  {
-    key: "coupons",
-    href: `${MANAGEMENT_BASE}/coupons`,
-    label: "Mã giảm giá",
-    isOverview: false as const,
-    allowedRoles: [UserRole.ADMIN, UserRole.CONTENT_MANAGER],
-  },
-  {
-    key: "users",
-    href: `${MANAGEMENT_BASE}/users`,
-    label: "Người dùng",
-    isOverview: false as const,
-    allowedRoles: [UserRole.ADMIN],
-  },
-  {
-    key: "reviews",
-    href: `${MANAGEMENT_BASE}/reviews`,
-    label: "Đánh giá",
-    isOverview: false as const,
-    allowedRoles: [UserRole.ADMIN, UserRole.CONTENT_MANAGER],
-  },
+  // {
+  //   key: "coupons",
+  //   href: `${MANAGEMENT_BASE}/coupons`,
+  //   label: "Mã giảm giá",
+  //   isOverview: false as const,
+  //   allowedRoles: [UserRole.ADMIN, UserRole.CONTENT_MANAGER],
+  // },
+  // {
+  //   key: "users",
+  //   href: `${MANAGEMENT_BASE}/users`,
+  //   label: "Người dùng",
+  //   isOverview: false as const,
+  //   allowedRoles: [UserRole.ADMIN],
+  // },
+  // {
+  //   key: "reviews",
+  //   href: `${MANAGEMENT_BASE}/reviews`,
+  //   label: "Đánh giá",
+  //   isOverview: false as const,
+  //   allowedRoles: [UserRole.ADMIN, UserRole.CONTENT_MANAGER],
+  // },
 ] as const;
 
 export type ManagementRouteKey = (typeof MANAGEMENT_ROUTES)[number]["key"];

@@ -26,13 +26,13 @@ async function getValidToken(connectionString: string): Promise<string> {
   if (existingLock) return existingLock;
 
   const userCookies = await cookies();
-  const token = userCookies.get("accessToken")?.value;
+  const token = userCookies.get("token")?.value;
   if (!token || isTokenExpiredInMinutes(token, 5)) {
     const refreshToken = userCookies.get("refreshToken")?.value;
     if (!refreshToken) throw new Error("No refresh token found");
     const res = await getToken(refreshToken);
     if (res.error || !res.data) throw new Error(res.error?.errorCode);
-    userCookies.set("accessToken", res.data.token, {
+    userCookies.set("token", res.data.token, {
       sameSite: "lax",
       httpOnly: true,
       path: "/",

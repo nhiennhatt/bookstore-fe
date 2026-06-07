@@ -206,7 +206,7 @@ export function BookInform({ book }: { book: BookDetail }) {
           </div>
         </div>
 
-        <ReviewSection />
+        {/* <ReviewSection /> */}
       </div>
     </main>
   );

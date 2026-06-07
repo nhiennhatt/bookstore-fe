@@ -27,12 +27,21 @@ import { AddAddressModal } from "./AddAdressModal";
 import { UpdateUserPayload } from "@/lib/interfaces/user";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { RequestVerifyModal } from "./RequestVerifyModal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { notFound } from "next/navigation";
 
 export function Profile({ isAddress = false }: { isAddress?: boolean }) {
   const [user, setUser] = useUser();
   const [isLoading] = useLoadingUser();
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [openAddAddressModal, setOpenAddAddressModal] = useState(false);
+  const [openVerifyModal, setOpenVerifyModal] = useState(false);
+
   const [firstName, setFirstName] = useState<string>(user?.firstName || "");
   const [lastName, setLastName] = useState<string>(user?.lastName || "");
   const [editingAddress, setEditingAddress] = useState<
@@ -49,14 +58,12 @@ export function Profile({ isAddress = false }: { isAddress?: boolean }) {
     fetchAddresses();
   }, [user]);
 
-  useEffect(() => {
-    if (isLoading || !user) return;
-    setFirstName(user.firstName || "");
-    setLastName(user.lastName || "");
-  }, [user, isLoading]);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   if (!user) {
-    return <div>Loading...</div>;
+    return notFound();
   }
 
   const handleEditUserInfo = (userInform: UpdateUserPayload) => {
@@ -142,9 +149,19 @@ export function Profile({ isAddress = false }: { isAddress?: boolean }) {
                   )}
 
                   {!user.verified && (
-                    <Badge className="bg-red-50 text-red-600 border-red-200 hover:bg-red-50">
-                      <XCircle size={12} className="mr-1" /> Chưa xác minh
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          onClick={() => setOpenVerifyModal(true)}
+                          className="bg-red-50 text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
+                        >
+                          <XCircle size={12} className="mr-1" /> Chưa xác minh
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Nhấn để xác minh tài khoản</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
 
@@ -322,6 +339,12 @@ export function Profile({ isAddress = false }: { isAddress?: boolean }) {
           </TabsContent>
         </Tabs>
       </div>
+      {user?.verified === false && (
+        <RequestVerifyModal
+          isOpen={openVerifyModal}
+          setIsOpen={setOpenVerifyModal}
+        />
+      )}
     </main>
   );
 }
